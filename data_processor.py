@@ -122,10 +122,10 @@ class MovieDataProcessor:
             features = {
                 'budget_millions': float(form_data.get('budget', 0)),
                 'runtime_minutes': float(form_data.get('runtime', 0)),
-                'release_year': int(form_data.get('year', 2024)),
+                'release_year': 2024,  # Default to current year
                 'genre': form_data.get('genre', ''),
-                'director': form_data.get('director', ''),
-                'studio': form_data.get('studio', '')
+                'director': 'Other',  # Default director
+                'studio': 'Universal Pictures'  # Default studio
             }
             
             return self.validate_movie_input(features)

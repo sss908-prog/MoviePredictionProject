@@ -112,20 +112,6 @@
                                 {% endfor %}
                             </select>
                         </div>
-                        
-                        <!-- Director -->
-                        <div class="col-md-6 mb-3">
-                            <label for="director" class="form-label">
-                                <i class="fas fa-user me-1"></i>
-                                Director
-                            </label>
-                            <select class="form-select" id="director" name="director" required>
-                                <option value="">Select a director...</option>
-                                {% for director in feature_options.directors %}
-                                    <option value="{{ director }}">{{ director }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
                     </div>
                     
                     <div class="d-grid">
@@ -380,7 +366,6 @@ function fillMovieData() {
         
         // Fill form fields with estimated values based on the selected movie
         document.getElementById('genre').value = genre;
-        document.getElementById('director').value = director;
         
         // Estimate budget based on genre and rating
         const budgetEstimates = {
@@ -405,19 +390,7 @@ function fillMovieData() {
         const estimatedRuntime = runtimeEstimates[genre] || 110;
         document.getElementById('runtime').value = estimatedRuntime;
         
-        // Set recent year
-        document.getElementById('year').value = 2024;
-        
-        // Estimate studio based on director or use default
-        const directorStudios = {
-            'Christopher Nolan': 'Warner Bros',
-            'Steven Spielberg': 'Universal Pictures',
-            'James Cameron': 'Disney',
-            'Martin Scorsese': 'Paramount Pictures'
-        };
-        
-        const estimatedStudio = directorStudios[director] || 'Universal Pictures';
-        document.getElementById('studio').value = estimatedStudio;
+
         
         // Show a notification
         const alert = document.createElement('div');
@@ -464,17 +437,23 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    budgetInput.addEventListener('input', function() {
-        validateNumericInput(this, {{ feature_stats.budget_millions.min }}, {{ feature_stats.budget_millions.max }});
-    });
+    if (budgetInput) {
+        budgetInput.addEventListener('input', function() {
+            validateNumericInput(this, {{ feature_stats.budget_millions.min }}, {{ feature_stats.budget_millions.max }});
+        });
+    }
     
-    runtimeInput.addEventListener('input', function() {
-        validateNumericInput(this, {{ feature_stats.runtime_minutes.min }}, {{ feature_stats.runtime_minutes.max }});
-    });
+    if (runtimeInput) {
+        runtimeInput.addEventListener('input', function() {
+            validateNumericInput(this, {{ feature_stats.runtime_minutes.min }}, {{ feature_stats.runtime_minutes.max }});
+        });
+    }
     
-    yearInput.addEventListener('input', function() {
-        validateNumericInput(this, {{ feature_stats.release_year.min }}, {{ feature_stats.release_year.max }});
-    });
+    // Movie selection functionality
+    const movieSelect = document.getElementById('movieSelect');
+    if (movieSelect) {
+        movieSelect.addEventListener('change', fillMovieData);
+    }
     
     // Auto-scroll to results if they exist
     {% if show_results %}
