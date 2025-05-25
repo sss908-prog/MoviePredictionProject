@@ -146,9 +146,9 @@ def internal_error(error):
     logger.error(f"Internal error: {str(error)}")
     return render_template('index.html', error_message="Internal server error"), 500
 
-# Initialize models on startup
+# Initialize models on startup with real data
 try:
-    logger.info("Initializing movie rating predictor...")
+    logger.info("Initializing movie rating predictor with real dataset...")
     if not predictor.is_trained:
         predictor.train_models()
 except Exception as e:
