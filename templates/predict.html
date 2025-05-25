@@ -99,22 +99,6 @@
                             </div>
                         </div>
                         
-                        <!-- Release Year -->
-                        <div class="col-md-6 mb-3">
-                            <label for="year" class="form-label">
-                                <i class="fas fa-calendar me-1"></i>
-                                Release Year
-                            </label>
-                            <input type="number" 
-                                   class="form-control" 
-                                   id="year" 
-                                   name="year" 
-                                   min="{{ feature_stats.release_year.min }}" 
-                                   max="{{ feature_stats.release_year.max }}" 
-                                   value="{{ feature_stats.release_year.suggested }}"
-                                   required>
-                        </div>
-                        
                         <!-- Genre -->
                         <div class="col-md-6 mb-3">
                             <label for="genre" class="form-label">
@@ -139,20 +123,6 @@
                                 <option value="">Select a director...</option>
                                 {% for director in feature_options.directors %}
                                     <option value="{{ director }}">{{ director }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        
-                        <!-- Studio -->
-                        <div class="col-md-6 mb-3">
-                            <label for="studio" class="form-label">
-                                <i class="fas fa-building me-1"></i>
-                                Production Studio
-                            </label>
-                            <select class="form-select" id="studio" name="studio" required>
-                                <option value="">Select a studio...</option>
-                                {% for studio in feature_options.studios %}
-                                    <option value="{{ studio }}">{{ studio }}</option>
                                 {% endfor %}
                             </select>
                         </div>

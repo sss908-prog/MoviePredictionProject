@@ -23,21 +23,28 @@ def get_actual_movies():
         movies = []
         for row in rows[1:]:  # Skip header
             if len(row) >= 6:
-                title = row[0]
-                genres = row[1]
-                directors = row[2]
-                rating = float(row[5])
-                
-                # Extract primary genre and director
-                primary_genre = genres.split(',')[0].strip().strip('"')
-                primary_director = directors.split(',')[0].strip().strip('"')
-                
-                movies.append({
-                    'title': title,
-                    'genre': primary_genre,
-                    'director': primary_director,
-                    'actual_rating': rating
-                })
+                try:
+                    title = row[0]
+                    genres = row[1]
+                    directors = row[2]
+                    rating_str = row[5].strip()
+                    
+                    # Convert rating to float, handling any extra spaces
+                    rating = float(rating_str)
+                    
+                    # Extract primary genre and director
+                    primary_genre = genres.split(',')[0].strip().strip('"')
+                    primary_director = directors.split(',')[0].strip().strip('"')
+                    
+                    movies.append({
+                        'title': title,
+                        'genre': primary_genre,
+                        'director': primary_director,
+                        'actual_rating': rating
+                    })
+                except (ValueError, IndexError) as e:
+                    # Skip rows with invalid data
+                    continue
         
         return sorted(movies, key=lambda x: x['title'])[:50]  # Return top 50 for dropdown
         
