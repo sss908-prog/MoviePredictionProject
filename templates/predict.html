@@ -60,6 +60,26 @@
                     {% endif %}
                     
                     <div class="row">
+                        <!-- Budget -->
+                        <div class="col-md-6 mb-3">
+                            <label for="budget" class="form-label">
+                                <i class="fas fa-dollar-sign me-1"></i>
+                                Budget (Millions USD)
+                            </label>
+                            <input type="number" 
+                                   class="form-control" 
+                                   id="budget" 
+                                   name="budget" 
+                                   min="{{ feature_stats.budget_millions.min }}" 
+                                   max="{{ feature_stats.budget_millions.max }}" 
+                                   step="0.1" 
+                                   value="{{ feature_stats.budget_millions.suggested }}"
+                                   required>
+                            <div class="form-text">
+                                Range: ${{ feature_stats.budget_millions.min }}M - ${{ feature_stats.budget_millions.max }}M
+                            </div>
+                        </div>
+                        
                         <!-- Runtime -->
                         <div class="col-md-6 mb-3">
                             <label for="runtime" class="form-label">
@@ -362,6 +382,18 @@ function fillMovieData() {
         document.getElementById('genre').value = genre;
         document.getElementById('director').value = director;
         
+        // Estimate budget based on genre and rating
+        const budgetEstimates = {
+            'Action': 120, 'Adventure': 100, 'Science Fiction': 130,
+            'Fantasy': 110, 'Animation': 85, 'Thriller': 45,
+            'Drama': 25, 'Comedy': 35, 'Romance': 20,
+            'Horror': 15, 'Crime': 40, 'War': 90
+        };
+        
+        const baseBudget = budgetEstimates[genre] || 50;
+        const estimatedBudget = Math.round(baseBudget * (parseFloat(actualRating) / 10) * 1.2);
+        document.getElementById('budget').value = estimatedBudget;
+        
         // Estimate runtime based on genre
         const runtimeEstimates = {
             'Action': 125, 'Adventure': 130, 'Science Fiction': 135,
@@ -372,7 +404,20 @@ function fillMovieData() {
         
         const estimatedRuntime = runtimeEstimates[genre] || 110;
         document.getElementById('runtime').value = estimatedRuntime;
-
+        
+        // Set recent year
+        document.getElementById('year').value = 2024;
+        
+        // Estimate studio based on director or use default
+        const directorStudios = {
+            'Christopher Nolan': 'Warner Bros',
+            'Steven Spielberg': 'Universal Pictures',
+            'James Cameron': 'Disney',
+            'Martin Scorsese': 'Paramount Pictures'
+        };
+        
+        const estimatedStudio = directorStudios[director] || 'Universal Pictures';
+        document.getElementById('studio').value = estimatedStudio;
         
         // Show a notification
         const alert = document.createElement('div');
@@ -406,7 +451,9 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     // Add input validation
+    const budgetInput = document.getElementById('budget');
     const runtimeInput = document.getElementById('runtime');
+    const yearInput = document.getElementById('year');
     
     function validateNumericInput(input, min, max) {
         const value = parseFloat(input.value);
