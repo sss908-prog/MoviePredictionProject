@@ -27,6 +27,38 @@
             </div>
             <div class="card-body">
                 <form method="POST" id="predictionForm">
+                    <!-- Movie Selection -->
+                    {% if actual_movies %}
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <div class="alert alert-info">
+                                <i class="fas fa-lightbulb me-2"></i>
+                                <strong>Quick Start:</strong> Select a movie from your dataset to auto-fill the form, or enter custom values below.
+                            </div>
+                            <label for="movieSelect" class="form-label">
+                                <i class="fas fa-film me-1"></i>
+                                Select from Your Movie Dataset
+                            </label>
+                            <select class="form-select" id="movieSelect" onchange="fillMovieData()">
+                                <option value="">Choose a movie to auto-fill...</option>
+                                {% for movie in actual_movies %}
+                                    <option value="{{ loop.index0 }}" 
+                                            data-title="{{ movie.title }}"
+                                            data-genre="{{ movie.genre }}"
+                                            data-director="{{ movie.director }}"
+                                            data-rating="{{ movie.actual_rating }}">
+                                        {{ movie.title }} ({{ movie.actual_rating }}/10)
+                                    </option>
+                                {% endfor %}
+                            </select>
+                            <div class="form-text">
+                                This will automatically fill the form with estimated values based on the selected movie.
+                            </div>
+                        </div>
+                    </div>
+                    <hr class="my-4">
+                    {% endif %}
+                    
                     <div class="row">
                         <!-- Budget -->
                         <div class="col-md-6 mb-3">
@@ -365,6 +397,79 @@
 
 {% block scripts %}
 <script>
+// Function to fill form data when a movie is selected
+function fillMovieData() {
+    const select = document.getElementById('movieSelect');
+    const selectedOption = select.options[select.selectedIndex];
+    
+    if (selectedOption.value) {
+        const title = selectedOption.dataset.title;
+        const genre = selectedOption.dataset.genre;
+        const director = selectedOption.dataset.director;
+        const actualRating = selectedOption.dataset.rating;
+        
+        // Fill form fields with estimated values based on the selected movie
+        document.getElementById('genre').value = genre;
+        document.getElementById('director').value = director;
+        
+        // Estimate budget based on genre and rating
+        const budgetEstimates = {
+            'Action': 120, 'Adventure': 100, 'Science Fiction': 130,
+            'Fantasy': 110, 'Animation': 85, 'Thriller': 45,
+            'Drama': 25, 'Comedy': 35, 'Romance': 20,
+            'Horror': 15, 'Crime': 40, 'War': 90
+        };
+        
+        const baseBudget = budgetEstimates[genre] || 50;
+        const estimatedBudget = Math.round(baseBudget * (parseFloat(actualRating) / 10) * 1.2);
+        document.getElementById('budget').value = estimatedBudget;
+        
+        // Estimate runtime based on genre
+        const runtimeEstimates = {
+            'Action': 125, 'Adventure': 130, 'Science Fiction': 135,
+            'Fantasy': 140, 'Animation': 95, 'Thriller': 110,
+            'Drama': 115, 'Comedy': 100, 'Romance': 105,
+            'Horror': 95, 'Crime': 120, 'War': 150
+        };
+        
+        const estimatedRuntime = runtimeEstimates[genre] || 110;
+        document.getElementById('runtime').value = estimatedRuntime;
+        
+        // Set recent year
+        document.getElementById('year').value = 2024;
+        
+        // Estimate studio based on director or use default
+        const directorStudios = {
+            'Christopher Nolan': 'Warner Bros',
+            'Steven Spielberg': 'Universal Pictures',
+            'James Cameron': 'Disney',
+            'Martin Scorsese': 'Paramount Pictures'
+        };
+        
+        const estimatedStudio = directorStudios[director] || 'Universal Pictures';
+        document.getElementById('studio').value = estimatedStudio;
+        
+        // Show a notification
+        const alert = document.createElement('div');
+        alert.className = 'alert alert-success alert-dismissible fade show mt-3';
+        alert.innerHTML = `
+            <i class="fas fa-check-circle me-2"></i>
+            Form filled with data for "<strong>${title}</strong>" (Actual Rating: ${actualRating}/10)
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        
+        const form = document.getElementById('predictionForm');
+        form.parentNode.insertBefore(alert, form);
+        
+        // Auto-remove notification after 5 seconds
+        setTimeout(() => {
+            if (alert.parentNode) {
+                alert.remove();
+            }
+        }, 5000);
+    }
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('predictionForm');
     const submitBtn = form.querySelector('button[type="submit"]');

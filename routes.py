@@ -3,8 +3,47 @@ from app import app
 from ml_models import predictor
 from data_processor import data_processor
 import logging
+import pandas as pd
 
 logger = logging.getLogger(__name__)
+
+def get_actual_movies():
+    """Get list of actual movies from the dataset for selection."""
+    try:
+        # Load the movie dataset
+        import csv
+        import io
+        
+        with open('movies_dataset.csv', 'r', encoding='utf-8') as file:
+            content = file.read()
+        
+        csv_reader = csv.reader(io.StringIO(content))
+        rows = list(csv_reader)
+        
+        movies = []
+        for row in rows[1:]:  # Skip header
+            if len(row) >= 6:
+                title = row[0]
+                genres = row[1]
+                directors = row[2]
+                rating = float(row[5])
+                
+                # Extract primary genre and director
+                primary_genre = genres.split(',')[0].strip().strip('"')
+                primary_director = directors.split(',')[0].strip().strip('"')
+                
+                movies.append({
+                    'title': title,
+                    'genre': primary_genre,
+                    'director': primary_director,
+                    'actual_rating': rating
+                })
+        
+        return sorted(movies, key=lambda x: x['title'])[:50]  # Return top 50 for dropdown
+        
+    except Exception as e:
+        logger.error(f"Error loading movies: {str(e)}")
+        return []
 
 @app.route('/')
 def index():
@@ -22,9 +61,14 @@ def predict():
         # Display the prediction form
         feature_options = data_processor.get_feature_options()
         feature_stats = data_processor.get_feature_statistics()
+        
+        # Get list of actual movies from dataset for selection
+        actual_movies = get_actual_movies()
+        
         return render_template('predict.html', 
                              feature_options=feature_options,
-                             feature_stats=feature_stats)
+                             feature_stats=feature_stats,
+                             actual_movies=actual_movies)
     
     elif request.method == 'POST':
         try:

@@ -257,3 +257,4 @@ def register_template_filters(app):
     app.jinja_env.filters['rating'] = format_rating
     app.jinja_env.filters['safe_float'] = safe_float
     app.jinja_env.filters['safe_int'] = safe_int
+    app.jinja_env.filters['get_rating_category'] = get_rating_category
