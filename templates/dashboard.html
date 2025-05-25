@@ -1,0 +1,435 @@
+{% extends "base.html" %}
+
+{% block title %}Model Dashboard - Movie Rating Predictor{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>
+                <i class="fas fa-chart-line text-primary me-2"></i>
+                Model Performance Dashboard
+            </h1>
+            <form method="POST" action="{{ url_for('retrain_models') }}" class="d-inline">
+                <button type="submit" class="btn btn-outline-primary" onclick="return confirm('This will retrain all models. Continue?')">
+                    <i class="fas fa-redo me-2"></i>
+                    Retrain Models
+                </button>
+            </form>
+        </div>
+        <p class="lead mb-5">
+            Comprehensive analytics and performance metrics for all machine learning models.
+        </p>
+    </div>
+</div>
+
+<!-- Summary Statistics -->
+<div class="row mb-5">
+    <div class="col-md-3 mb-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body text-center">
+                <i class="fas fa-brain fa-2x mb-2"></i>
+                <h4>{{ stats.total_models }}</h4>
+                <p class="mb-0">Active Models</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-3">
+        <div class="card bg-success text-white">
+            <div class="card-body text-center">
+                <i class="fas fa-trophy fa-2x mb-2"></i>
+                <h4>{{ stats.best_model.replace('_', ' ').title() if stats.best_model else 'N/A' }}</h4>
+                <p class="mb-0">Best Model</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-3">
+        <div class="card bg-info text-white">
+            <div class="card-body text-center">
+                <i class="fas fa-percentage fa-2x mb-2"></i>
+                <h4>{{ "%.1f"|format(stats.best_r2 * 100) }}%</h4>
+                <p class="mb-0">Best R² Score</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-3">
+        <div class="card bg-warning text-dark">
+            <div class="card-body text-center">
+                <i class="fas fa-bullseye fa-2x mb-2"></i>
+                <h4>{{ "%.3f"|format(stats.avg_rmse) }}</h4>
+                <p class="mb-0">Avg RMSE</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Performance Charts -->
+<div class="row mb-5">
+    <div class="col-lg-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-bar me-2"></i>
+                    R² Score Comparison
+                </h5>
+            </div>
+            <div class="card-body">
+                <canvas id="r2Chart" height="300"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-line me-2"></i>
+                    RMSE Comparison
+                </h5>
+            </div>
+            <div class="card-body">
+                <canvas id="rmseChart" height="300"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Detailed Performance Table -->
+<div class="row mb-5">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-table me-2"></i>
+                    Detailed Performance Metrics
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-dark table-striped table-hover">
+                        <thead>
+                            <tr>
+                                <th>Model</th>
+                                <th>R² Score</th>
+                                <th>RMSE</th>
+                                <th>MAE</th>
+                                <th>Cross-Validation Score</th>
+                                <th>Performance Grade</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for model_name, perf in model_performance.items() %}
+                                <tr{% if model_name == stats.best_model %} class="table-success"{% endif %}>
+                                    <td>
+                                        <strong>{{ model_name.replace('_', ' ').title() }}</strong>
+                                        {% if model_name == stats.best_model %}
+                                            <i class="fas fa-crown text-warning ms-2" title="Best Performing Model"></i>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-primary">{{ "%.3f"|format(perf.r2) }}</span>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-secondary">{{ "%.3f"|format(perf.rmse) }}</span>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info">{{ "%.3f"|format(perf.mae) }}</span>
+                                    </td>
+                                    <td>
+                                        {{ "%.3f"|format(perf.cv_score_mean) }} ± {{ "%.3f"|format(perf.cv_score_std) }}
+                                    </td>
+                                    <td>
+                                        {% if perf.r2 >= 0.8 %}
+                                            <span class="badge bg-success">Excellent</span>
+                                        {% elif perf.r2 >= 0.6 %}
+                                            <span class="badge bg-primary">Good</span>
+                                        {% elif perf.r2 >= 0.4 %}
+                                            <span class="badge bg-warning">Fair</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">Poor</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Model Insights -->
+<div class="row mb-5">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-lightbulb me-2"></i>
+                    Model Insights & Recommendations
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="text-primary">
+                            <i class="fas fa-line-chart me-2"></i>
+                            Linear Regression
+                        </h6>
+                        <ul class="list-unstyled small text-muted">
+                            <li><i class="fas fa-check text-success me-2"></i>Fast training and prediction</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Highly interpretable coefficients</li>
+                            <li><i class="fas fa-times text-danger me-2"></i>Assumes linear relationships</li>
+                            <li><i class="fas fa-times text-danger me-2"></i>May underfit complex patterns</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <h6 class="text-success">
+                            <i class="fas fa-tree me-2"></i>
+                            Random Forest
+                        </h6>
+                        <ul class="list-unstyled small text-muted">
+                            <li><i class="fas fa-check text-success me-2"></i>Handles non-linear relationships</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Resistant to overfitting</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Feature importance available</li>
+                            <li><i class="fas fa-times text-danger me-2"></i>Less interpretable than linear models</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="row mt-3">
+                    <div class="col-md-6">
+                        <h6 class="text-info">
+                            <i class="fas fa-rocket me-2"></i>
+                            Gradient Boosting
+                        </h6>
+                        <ul class="list-unstyled small text-muted">
+                            <li><i class="fas fa-check text-success me-2"></i>Often highest accuracy</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Handles complex patterns well</li>
+                            <li><i class="fas fa-times text-danger me-2"></i>Longer training time</li>
+                            <li><i class="fas fa-times text-danger me-2"></i>Risk of overfitting</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <h6 class="text-warning">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            Recommendations
+                        </h6>
+                        <ul class="list-unstyled small text-muted">
+                            <li><i class="fas fa-arrow-right text-primary me-2"></i>Use {{ stats.best_model.replace('_', ' ').title() if stats.best_model else 'best performing model' }} for predictions</li>
+                            <li><i class="fas fa-arrow-right text-primary me-2"></i>Monitor cross-validation scores</li>
+                            <li><i class="fas fa-arrow-right text-primary me-2"></i>Retrain with more data periodically</li>
+                            <li><i class="fas fa-arrow-right text-primary me-2"></i>Consider ensemble methods for critical predictions</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card bg-dark border-primary">
+            <div class="card-header bg-primary">
+                <h6 class="mb-0 text-white">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Performance Guide
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <h6 class="text-primary">R² Score</h6>
+                    <p class="small text-muted mb-1">
+                        Coefficient of determination (0-1, higher is better)
+                    </p>
+                    <div class="progress progress-sm">
+                        <div class="progress-bar bg-danger" style="width: 20%"></div>
+                        <div class="progress-bar bg-warning" style="width: 20%"></div>
+                        <div class="progress-bar bg-primary" style="width: 20%"></div>
+                        <div class="progress-bar bg-success" style="width: 40%"></div>
+                    </div>
+                    <small class="text-muted">Poor | Fair | Good | Excellent</small>
+                </div>
+                
+                <div class="mb-3">
+                    <h6 class="text-secondary">RMSE</h6>
+                    <p class="small text-muted mb-1">
+                        Root Mean Square Error (lower is better)
+                    </p>
+                    <p class="small text-muted">
+                        Measures average prediction error in rating points.
+                    </p>
+                </div>
+                
+                <div>
+                    <h6 class="text-info">Cross-Validation</h6>
+                    <p class="small text-muted mb-1">
+                        Average performance across multiple data splits
+                    </p>
+                    <p class="small text-muted">
+                        Indicates model stability and generalization.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Prepare data for charts
+    const modelData = {{ model_performance | tojson }};
+    const models = Object.keys(modelData);
+    const modelLabels = models.map(name => name.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()));
+    const r2Scores = models.map(name => modelData[name].r2);
+    const rmseScores = models.map(name => modelData[name].rmse);
+    
+    // Color scheme
+    const colors = [
+        'rgba(54, 162, 235, 0.8)',   // Blue
+        'rgba(75, 192, 192, 0.8)',   // Green
+        'rgba(255, 99, 132, 0.8)',   // Red
+        'rgba(255, 206, 86, 0.8)',   // Yellow
+        'rgba(153, 102, 255, 0.8)'   // Purple
+    ];
+    
+    const borderColors = [
+        'rgba(54, 162, 235, 1)',
+        'rgba(75, 192, 192, 1)',
+        'rgba(255, 99, 132, 1)',
+        'rgba(255, 206, 86, 1)',
+        'rgba(153, 102, 255, 1)'
+    ];
+    
+    // R² Score Chart
+    const r2Ctx = document.getElementById('r2Chart').getContext('2d');
+    new Chart(r2Ctx, {
+        type: 'bar',
+        data: {
+            labels: modelLabels,
+            datasets: [{
+                label: 'R² Score',
+                data: r2Scores,
+                backgroundColor: colors,
+                borderColor: borderColors,
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                title: {
+                    display: true,
+                    text: 'Model R² Scores (Higher is Better)',
+                    color: '#fff'
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 1,
+                    ticks: {
+                        color: '#fff'
+                    },
+                    grid: {
+                        color: 'rgba(255, 255, 255, 0.1)'
+                    }
+                },
+                x: {
+                    ticks: {
+                        color: '#fff'
+                    },
+                    grid: {
+                        color: 'rgba(255, 255, 255, 0.1)'
+                    }
+                }
+            }
+        }
+    });
+    
+    // RMSE Chart
+    const rmseCtx = document.getElementById('rmseChart').getContext('2d');
+    new Chart(rmseCtx, {
+        type: 'line',
+        data: {
+            labels: modelLabels,
+            datasets: [{
+                label: 'RMSE',
+                data: rmseScores,
+                backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                borderColor: 'rgba(255, 99, 132, 1)',
+                borderWidth: 3,
+                fill: true,
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                title: {
+                    display: true,
+                    text: 'Model RMSE Values (Lower is Better)',
+                    color: '#fff'
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        color: '#fff'
+                    },
+                    grid: {
+                        color: 'rgba(255, 255, 255, 0.1)'
+                    }
+                },
+                x: {
+                    ticks: {
+                        color: '#fff'
+                    },
+                    grid: {
+                        color: 'rgba(255, 255, 255, 0.1)'
+                    }
+                }
+            }
+        }
+    });
+    
+    // Add hover effects to performance table rows
+    const tableRows = document.querySelectorAll('tbody tr');
+    tableRows.forEach(row => {
+        row.addEventListener('mouseenter', function() {
+            this.style.transform = 'scale(1.02)';
+            this.style.transition = 'transform 0.2s ease';
+        });
+        
+        row.addEventListener('mouseleave', function() {
+            this.style.transform = 'scale(1)';
+        });
+    });
+    
+    // Add loading animation for retrain button
+    const retrainForm = document.querySelector('form[action*="retrain"]');
+    if (retrainForm) {
+        retrainForm.addEventListener('submit', function() {
+            const btn = this.querySelector('button');
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Retraining...';
+            btn.disabled = true;
+        });
+    }
+});
+</script>
+{% endblock %}

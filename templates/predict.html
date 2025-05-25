@@ -1,0 +1,415 @@
+{% extends "base.html" %}
+
+{% block title %}Predict Movie Rating - Movie Rating Predictor{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="mb-4">
+            <i class="fas fa-crystal-ball text-primary me-2"></i>
+            Movie Rating Prediction
+        </h1>
+        <p class="lead mb-5">
+            Enter movie details below to get rating predictions from our machine learning models.
+        </p>
+    </div>
+</div>
+
+<!-- Prediction Form -->
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-film me-2"></i>
+                    Movie Information
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" id="predictionForm">
+                    <div class="row">
+                        <!-- Budget -->
+                        <div class="col-md-6 mb-3">
+                            <label for="budget" class="form-label">
+                                <i class="fas fa-dollar-sign me-1"></i>
+                                Budget (Millions USD)
+                            </label>
+                            <input type="number" 
+                                   class="form-control" 
+                                   id="budget" 
+                                   name="budget" 
+                                   min="{{ feature_stats.budget_millions.min }}" 
+                                   max="{{ feature_stats.budget_millions.max }}" 
+                                   step="0.1" 
+                                   value="{{ feature_stats.budget_millions.suggested }}"
+                                   required>
+                            <div class="form-text">
+                                Range: ${{ feature_stats.budget_millions.min }}M - ${{ feature_stats.budget_millions.max }}M
+                            </div>
+                        </div>
+                        
+                        <!-- Runtime -->
+                        <div class="col-md-6 mb-3">
+                            <label for="runtime" class="form-label">
+                                <i class="fas fa-clock me-1"></i>
+                                Runtime (Minutes)
+                            </label>
+                            <input type="number" 
+                                   class="form-control" 
+                                   id="runtime" 
+                                   name="runtime" 
+                                   min="{{ feature_stats.runtime_minutes.min }}" 
+                                   max="{{ feature_stats.runtime_minutes.max }}" 
+                                   value="{{ feature_stats.runtime_minutes.suggested }}"
+                                   required>
+                            <div class="form-text">
+                                Range: {{ feature_stats.runtime_minutes.min }} - {{ feature_stats.runtime_minutes.max }} minutes
+                            </div>
+                        </div>
+                        
+                        <!-- Release Year -->
+                        <div class="col-md-6 mb-3">
+                            <label for="year" class="form-label">
+                                <i class="fas fa-calendar me-1"></i>
+                                Release Year
+                            </label>
+                            <input type="number" 
+                                   class="form-control" 
+                                   id="year" 
+                                   name="year" 
+                                   min="{{ feature_stats.release_year.min }}" 
+                                   max="{{ feature_stats.release_year.max }}" 
+                                   value="{{ feature_stats.release_year.suggested }}"
+                                   required>
+                        </div>
+                        
+                        <!-- Genre -->
+                        <div class="col-md-6 mb-3">
+                            <label for="genre" class="form-label">
+                                <i class="fas fa-tags me-1"></i>
+                                Genre
+                            </label>
+                            <select class="form-select" id="genre" name="genre" required>
+                                <option value="">Select a genre...</option>
+                                {% for genre in feature_options.genres %}
+                                    <option value="{{ genre }}">{{ genre }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <!-- Director -->
+                        <div class="col-md-6 mb-3">
+                            <label for="director" class="form-label">
+                                <i class="fas fa-user me-1"></i>
+                                Director
+                            </label>
+                            <select class="form-select" id="director" name="director" required>
+                                <option value="">Select a director...</option>
+                                {% for director in feature_options.directors %}
+                                    <option value="{{ director }}">{{ director }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <!-- Studio -->
+                        <div class="col-md-6 mb-3">
+                            <label for="studio" class="form-label">
+                                <i class="fas fa-building me-1"></i>
+                                Production Studio
+                            </label>
+                            <select class="form-select" id="studio" name="studio" required>
+                                <option value="">Select a studio...</option>
+                                {% for studio in feature_options.studios %}
+                                    <option value="{{ studio }}">{{ studio }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="fas fa-magic me-2"></i>
+                            Predict Rating
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Quick Tips -->
+    <div class="col-lg-4">
+        <div class="card bg-dark border-secondary">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-lightbulb text-warning me-2"></i>
+                    Prediction Tips
+                </h6>
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled small">
+                    <li class="mb-2">
+                        <i class="fas fa-check text-success me-2"></i>
+                        Higher budgets often correlate with better ratings
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-check text-success me-2"></i>
+                        Optimal runtime is typically 90-150 minutes
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-check text-success me-2"></i>
+                        Established directors tend to get higher ratings
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-check text-success me-2"></i>
+                        Genre significantly impacts audience expectations
+                    </li>
+                    <li class="mb-0">
+                        <i class="fas fa-check text-success me-2"></i>
+                        Recent movies may have different rating patterns
+                    </li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="card bg-dark border-info mt-3">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-info-circle text-info me-2"></i>
+                    Model Information
+                </h6>
+            </div>
+            <div class="card-body">
+                <p class="small text-muted mb-2">
+                    Our prediction system uses three machine learning models:
+                </p>
+                <ul class="list-unstyled small">
+                    <li><i class="fas fa-line-chart text-primary me-2"></i>Linear Regression</li>
+                    <li><i class="fas fa-tree text-success me-2"></i>Random Forest</li>
+                    <li><i class="fas fa-rocket text-info me-2"></i>Gradient Boosting</li>
+                </ul>
+                <p class="small text-muted mb-0">
+                    The best performing model is automatically selected for the final prediction.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Results Section -->
+{% if show_results %}
+<div class="row mt-5">
+    <div class="col-12">
+        <h2 class="mb-4">
+            <i class="fas fa-chart-bar text-success me-2"></i>
+            Prediction Results
+        </h2>
+    </div>
+    
+    <!-- Main Prediction -->
+    <div class="col-lg-4 mb-4">
+        <div class="card border-success">
+            <div class="card-header bg-success">
+                <h5 class="mb-0 text-white">
+                    <i class="fas fa-trophy me-2"></i>
+                    Best Model Prediction
+                </h5>
+            </div>
+            <div class="card-body text-center">
+                <div class="display-4 text-success mb-2">
+                    {{ "%.1f"|format(best_prediction) }}/10
+                </div>
+                <p class="mb-2">
+                    <strong>{{ best_model.replace('_', ' ').title() }}</strong>
+                </p>
+                {% set rating_info = best_prediction | get_rating_category %}
+                <span class="badge bg-{{ rating_info.color }} fs-6">
+                    {{ rating_info.category }}
+                </span>
+            </div>
+        </div>
+    </div>
+    
+    <!-- All Predictions -->
+    <div class="col-lg-8 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-line me-2"></i>
+                    All Model Predictions
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% for model_name, prediction in predictions.items() %}
+                        <div class="col-md-4 mb-3">
+                            <div class="card bg-dark border-secondary h-100">
+                                <div class="card-body text-center">
+                                    <h6 class="card-title">{{ model_name.replace('_', ' ').title() }}</h6>
+                                    {% if prediction %}
+                                        <div class="h4 text-primary">{{ "%.1f"|format(prediction) }}/10</div>
+                                        {% if model_performance and model_name in model_performance %}
+                                            <small class="text-muted">
+                                                R² Score: {{ "%.3f"|format(model_performance[model_name].r2) }}
+                                            </small>
+                                        {% endif %}
+                                    {% else %}
+                                        <div class="text-danger">Error</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Movie Summary -->
+    <div class="col-lg-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-film me-2"></i>
+                    Movie Summary
+                </h5>
+            </div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    {% for key, value in feature_summary.items() %}
+                        <dt class="col-sm-4">{{ key }}:</dt>
+                        <dd class="col-sm-8">{{ value }}</dd>
+                    {% endfor %}
+                </dl>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Similar Movies -->
+    {% if similar_movies %}
+    <div class="col-lg-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-search me-2"></i>
+                    Similar Movies
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="list-group list-group-flush">
+                    {% for movie in similar_movies %}
+                        <div class="list-group-item bg-dark border-secondary d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>{{ movie.title }}</strong>
+                                <br>
+                                <small class="text-muted">{{ movie.year }}</small>
+                            </div>
+                            <div class="text-end">
+                                <span class="badge bg-primary">{{ movie.rating }}/10</span>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Model Performance -->
+    {% if model_performance %}
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-analytics me-2"></i>
+                    Model Performance Metrics
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-dark table-striped">
+                        <thead>
+                            <tr>
+                                <th>Model</th>
+                                <th>R² Score</th>
+                                <th>RMSE</th>
+                                <th>MAE</th>
+                                <th>CV Score</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for model_name, perf in model_performance.items() %}
+                                <tr{% if model_name == best_model %} class="table-success"{% endif %}>
+                                    <td>
+                                        {{ model_name.replace('_', ' ').title() }}
+                                        {% if model_name == best_model %}
+                                            <i class="fas fa-crown text-warning ms-1" title="Best Model"></i>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ "%.3f"|format(perf.r2) }}</td>
+                                    <td>{{ "%.3f"|format(perf.rmse) }}</td>
+                                    <td>{{ "%.3f"|format(perf.mae) }}</td>
+                                    <td>{{ "%.3f"|format(perf.cv_score_mean) }} ± {{ "%.3f"|format(perf.cv_score_std) }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endif %}
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('predictionForm');
+    const submitBtn = form.querySelector('button[type="submit"]');
+    
+    form.addEventListener('submit', function(e) {
+        // Show loading state
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Predicting...';
+        submitBtn.disabled = true;
+    });
+    
+    // Add input validation
+    const budgetInput = document.getElementById('budget');
+    const runtimeInput = document.getElementById('runtime');
+    const yearInput = document.getElementById('year');
+    
+    function validateNumericInput(input, min, max) {
+        const value = parseFloat(input.value);
+        if (isNaN(value) || value < min || value > max) {
+            input.setCustomValidity(`Please enter a value between ${min} and ${max}`);
+        } else {
+            input.setCustomValidity('');
+        }
+    }
+    
+    budgetInput.addEventListener('input', function() {
+        validateNumericInput(this, {{ feature_stats.budget_millions.min }}, {{ feature_stats.budget_millions.max }});
+    });
+    
+    runtimeInput.addEventListener('input', function() {
+        validateNumericInput(this, {{ feature_stats.runtime_minutes.min }}, {{ feature_stats.runtime_minutes.max }});
+    });
+    
+    yearInput.addEventListener('input', function() {
+        validateNumericInput(this, {{ feature_stats.release_year.min }}, {{ feature_stats.release_year.max }});
+    });
+    
+    // Auto-scroll to results if they exist
+    {% if show_results %}
+    setTimeout(function() {
+        const resultsSection = document.querySelector('h2:has(.fa-chart-bar)');
+        if (resultsSection) {
+            resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    }, 500);
+    {% endif %}
+});
+</script>
+{% endblock %}
