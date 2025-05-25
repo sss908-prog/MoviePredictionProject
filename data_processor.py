@@ -175,12 +175,13 @@ class MovieDataProcessor:
         try:
             summary = {}
             
+            # Add movie title if available
+            if 'movie_title' in movie_data and movie_data['movie_title']:
+                summary['Movie Title'] = movie_data['movie_title']
+            
             summary['Budget'] = f"${movie_data['budget_millions']:.1f} million"
             summary['Runtime'] = f"{movie_data['runtime_minutes']:.0f} minutes"
-            summary['Release Year'] = str(movie_data['release_year'])
             summary['Genre'] = movie_data['genre']
-            summary['Director'] = movie_data['director']
-            summary['Studio'] = movie_data['studio']
             
             return summary
             

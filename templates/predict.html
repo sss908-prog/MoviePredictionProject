@@ -59,6 +59,9 @@
                     <hr class="my-4">
                     {% endif %}
                     
+                    <!-- Hidden field to track selected movie title -->
+                    <input type="hidden" id="selected_movie_title" name="selected_movie_title" value="">
+                    
                     <div class="row">
                         <!-- Budget -->
                         <div class="col-md-6 mb-3">
@@ -366,6 +369,9 @@ function fillMovieData() {
         
         // Fill form fields with estimated values based on the selected movie
         document.getElementById('genre').value = genre;
+        
+        // Store the selected movie title in hidden field
+        document.getElementById('selected_movie_title').value = title;
         
         // Estimate budget based on genre and rating
         const budgetEstimates = {

@@ -82,6 +82,10 @@ def predict():
             # Extract features from form
             movie_features = data_processor.extract_features_from_form(request.form)
             
+            # Add movie title if selected from dropdown
+            if 'selected_movie_title' in request.form and request.form['selected_movie_title']:
+                movie_features['movie_title'] = request.form['selected_movie_title']
+            
             # Ensure models are trained
             if not predictor.is_trained:
                 logger.info("Models not trained, training now...")
@@ -115,6 +119,7 @@ def predict():
             return render_template('predict.html',
                                  feature_options=data_processor.get_feature_options(),
                                  feature_stats=data_processor.get_feature_statistics(),
+                                 actual_movies=get_actual_movies(),
                                  predictions=predictions,
                                  best_prediction=best_prediction,
                                  best_model=predictor.best_model_name,
