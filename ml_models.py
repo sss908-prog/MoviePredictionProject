@@ -109,9 +109,9 @@ class MovieRatingPredictor:
             'Documentary': 5, 'Western': 45
         }
         base = base_budgets.get(genre, 50)
-        # Higher rated movies tend to have higher budgets
-        rating_multiplier = (rating / 10) * 1.5 + 0.5
-        return max(1.0, min(300.0, base * rating_multiplier * np.random.uniform(0.7, 1.3)))
+        # Higher rated movies tend to have higher budgets, but more precisely calibrated
+        rating_multiplier = (rating / 10) * 0.8 + 0.6  # More conservative scaling
+        return max(1.0, min(200.0, base * rating_multiplier))
     
     def _estimate_runtime(self, genre):
         """Estimate runtime based on genre."""
@@ -125,12 +125,12 @@ class MovieRatingPredictor:
             'Documentary': 90, 'Western': 120
         }
         base = base_runtimes.get(genre, 110)
-        return max(80, min(200, base + np.random.randint(-15, 16)))
+        return base  # Remove randomness for consistent predictions
     
     def _estimate_year(self, title):
         """Estimate release year based on title patterns."""
         # Most movies in the dataset appear to be recent
-        return np.random.randint(2020, 2025)
+        return 2023  # Use consistent year for better predictions
     
     def _estimate_studio(self, director):
         """Estimate studio based on director."""
