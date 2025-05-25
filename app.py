@@ -11,6 +11,10 @@ app = Flask(__name__)
 app.secret_key = os.environ.get("SESSION_SECRET", "dev-secret-key-change-in-production")
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 
+# Register template filters
+from utils import register_template_filters
+register_template_filters(app)
+
 # Import routes after app creation to avoid circular imports
 from routes import *
 
